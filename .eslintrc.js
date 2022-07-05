@@ -13,6 +13,15 @@ module.exports = {
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'space-before-function-paren': 'off'
+    'space-before-function-paren': 'off',
+    "vue/multi-word-component-names": [//关闭驼峰式命名规则
+      "error",
+      {
+        ignores: ["index"], //需要忽略的组件名
+      },
+    ],
+  },
+  "globals": {
+    "error": true
   }
 }
