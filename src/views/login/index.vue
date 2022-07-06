@@ -1,93 +1,94 @@
 <template>
-  <div class="login-conternal">
-    <el-form
-      ref="loginRef"
-      :model="LoginForm"
-      label-width="100px"
-      class="demo-ruleForm"
-      :rules="loginRules"
-    >
-      <el-form-item label="用户名" prop="username">
-        <el-input v-model="LoginForm.username" />
-      </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input v-model="LoginForm.password" />
-      </el-form-item>
-      <el-form-item label="验证码" prop="code">
-        <el-input v-model="LoginForm.code" style="width: 172px" />
-        <el-image
-          style="width: 120px; height: 40px; margin-left: 5px"
-          :src="captchaImg"
-        ></el-image>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="getlogin">提交</el-button>
-        <el-button>获取密码</el-button>
-      </el-form-item>
-    </el-form>
+  <div class="login">
+    <div class="loginForm">
+      <el-form
+        ref="loginFormRef"
+        :model="loginForm"
+        :rules="loginFromRules"
+        label-width="120px"
+        class="demo-ruleForm"
+        :size="formSize"
+        status-icon
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="loginForm.username" size="large" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="loginForm.password" type="password" size="large" />
+        </el-form-item>
+        <el-form-item label="验证码" prop="code">
+          <el-input
+            v-model="loginForm.code"
+            style="width: 130px"
+            size="large"
+          />
+          <img :src="data.codeUrl" @click="getCode" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handelLogin">提交</el-button>
+          <el-button>获取密码</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { validatePassword, validateCode } from './rules.js'
-// import { useStore } from 'vuex'
-import { captcha,login } from '../../api/user'
-const loginRef = ref()
-const LoginForm = reactive({
+import { reactive, ref } from 'vue'
+import { getLoginCode, login, getMenuList } from '../../api/login'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+
+const store = useStore()
+const router = useRouter()
+
+const loginForm = reactive({
   username: 'test',
-  password: '1234567',
+  password: 1234567,
   code: ''
 })
 
-const captchaImg = ref()
-const token = ref()
+const loginFromRules = reactive({
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入图形验证码', trigger: 'blur' }]
+})
 
+const data = reactive({
+  codeUrl: '',
+  token: ''
+})
+// 获取图片校验码
 async function getCode() {
-  const res = await captcha()
-  console.log(res)
-  token.value = res.data.data.token
-  captchaImg.value = res.data.data.captchaImg
+  const res = await getLoginCode()
+  data.codeUrl = res.data.data.captchaImg
+  data.token = res.data.data.token
 }
 getCode()
-const loginRules = reactive({
-  username: [
-    {
-      required: true,
-      trigger: 'blur',
-      message: '用户名为必填项'
-    }
-  ],
-  password: [
-    {
-      required: true,
-      trigger: 'blur',
-      validator: validatePassword
-    }
-  ],
-  code: [
-    {
-      required: true,
-      trigger: 'blur',
-      // message: '请输入验证码',
-      validator:validateCode
-    }
-  ]
-})
-async function getlogin() {
-  if (!loginRef.value) return
-  await loginRef.value.validate(async (valid) => {
+
+// 登录
+const loginFormRef = ref()
+function handelLogin() {
+  if (!loginFormRef.value) return
+  loginFormRef.value.validate(async (valid) => {
     if (valid) {
       const res = await login({
-        username: LoginForm.username,
-        password: LoginForm.password,
-        code: LoginForm.code,
-        token: token.value
+        username: loginForm.username,
+        password: loginForm.password,
+        code: loginForm.code,
+        token: data.token
       })
       if (res.data.code === 200) {
-        alert('success')
+        store.commit('user/setHeaders', res.headers.authorization)
+        getMenuList().then((response) => {
+          store.commit('user/setMenuList', response.data.data.nav)
+          router.push('/')
+        })
+        store.dispatch('user/getUser')
       } else {
-        alert(res.data.msg)
+        // console.log(res)
+        loginForm.code = ''
+        getCode()
       }
     }
   })
@@ -95,23 +96,19 @@ async function getlogin() {
 </script>
 
 <style lang="scss" scoped>
-.login-conternal {
-  background-color: #fafafa;
+.login {
+  background: #fafafa;
   height: 100%;
-  overflow: hidden;
-  .demo-ruleForm {
-    height: 100%;
-    margin: 250px auto;
-    width: 600px;
-    padding: 0 100px;
-    box-sizing: border-box;
-    .el-input {
-      width: 300px;
-      height: 40.8px;
-    }
-    .el-button {
-      padding: 12px 20px;
-      height: 40px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  .loginForm {
+    width: 380px;
+    img {
+      border-radius: 5px;
+      width: 120px;
+      height: 100%;
+      margin-left: 10px;
     }
   }
 }

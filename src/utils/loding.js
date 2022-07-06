@@ -1,13 +1,12 @@
 import { ElLoading } from 'element-plus'
 
-const loading = {
+const loding = {
   loadingInstance: null,
   open() {
-    if (this.loadingInstance == null) {
+    if (this.loadingInstance === null) {
       this.loadingInstance = ElLoading.service({
-        lock: true,
-        text: 'Loading',
-        background: 'rgba(0, 0, 0, 0.7)'
+        text: '疯狂加载中...',
+        background: 'rgba(0,0,0,.5)'
       })
     }
   },
@@ -18,4 +17,4 @@ const loading = {
     }
   }
 }
-export default loading
+export { loding }
