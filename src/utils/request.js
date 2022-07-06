@@ -33,7 +33,7 @@ http.interceptors.response.use(
   (res) => {
     loding.close()
     if (res.data.code === 200) {
-      _showMessage(res.data.msg, 'success')
+      _showMessage('成功', 'success')
     } else if (res.data.code === 400) {
       _showMessage(res.data.msg, 'error')
     }
